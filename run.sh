@@ -1,12 +1,9 @@
 #!/bin/bash
 
 if [[ $# -ne 6 ]]; then
-    echo "Usage: $0 <input_fasta> <description> <cpu/gpu> <monomer/multimer> <cuda/amd> <nomsa/msa>"
+    echo "Usage: $0 <input_fasta> <description> <cpu/gpu> <monomer/multimer> <nvidia/amd> <nomsa/msa>"
     exit 1
 fi
-
-ml purge
-ml load hmmer-3.4-a100 hh-suite-3.3_AVX2 kalign-3.4.0-a100
 
 input=$1
 description=$2
@@ -36,9 +33,14 @@ else
     exit 1
 fi
 
+# Purge modules
+ml purge
 
 # Combined AMD and CUDA platform setup
 if [[ "$platform" == "amd" ]]; then
+    # Load related modules
+    ml load hmmer-3.4 hh-suite-3.3_AVX2 kalign-3.4.0
+
     case $mode in
         cpu)
             export JAX_PLATFORMS=cpu
@@ -65,6 +67,9 @@ if [[ "$platform" == "amd" ]]; then
             ;;
     esac
 elif [[ "$platform" == "nvidia" ]]; then
+    # Load related modules
+    ml load hmmer-3.4-a100 hh-suite-3.3_AVX2 kalign-3.4.0-a100
+
     case $mode in
         cpu)
             export JAX_PLATFORMS=cpu
