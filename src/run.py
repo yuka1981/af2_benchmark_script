@@ -25,13 +25,25 @@ def setup_environment(args):
         modules = ["hmmer-3.4", "hh-suite-3.3_AVX2", "kalign-3.4.0"]
         for module in modules:
             subprocess.run(["ml", "load", module], check=True)
+
         if args.mode == "cpu":
             os.environ["JAX_PLATFORMS"] = "cpu"
             os.environ["HIP_VISIBLE_DEVICES"] = "-1"
-        elif args.mode in ["1gpu0", "1gpu1", "2gpus"]:
+        elif args.mode == "1gpu0":
             os.environ["JAX_PLATFORMS"] = "rocm"
             os.environ["ROCM_PATH"] = "/opt/rocm"
-            os.environ["HIP_VISIBLE_DEVICES"] = ",".join(args.mode[-1])
+            os.environ["HIP_VISIBLE_DEVICES"] = "0"
+        elif args.mode == "1gpu1":
+            os.environ["JAX_PLATFORMS"] = "rocm"
+            os.environ["ROCM_PATH"] = "/opt/rocm"
+            os.environ["HIP_VISIBLE_DEVICES"] = "1"
+        elif args.mode == "2gpus":
+            os.environ["JAX_PLATFORMS"] = "rocm"
+            os.environ["ROCM_PATH"] = "/opt/rocm"
+            os.environ["HIP_VISIBLE_DEVICES"] = "0,1"
+        else:
+            raise ValueError(f"Error: Unsupported mode '{args.mode}' for AMD platform.")
+
     elif args.platform == "nvidia":
         modules = ["hmmer-3.4-a100", "hh-suite-3.3_AVX2", "kalign-3.4.0-a100"]
         for module in modules:
@@ -51,12 +63,14 @@ def setup_environment(args):
             os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
         else:
             raise ValueError(f"Error: Unsupported mode '{args.mode}' for NVIDIA platform.")
+
     else:
         raise ValueError("Error: Unknown platform.")
 
     if "CONDA_PREFIX" not in os.environ or "CONDA_DEFAULT_ENV" not in os.environ:
         raise EnvironmentError("Error: Environment variables CONDA_PREFIX or CONDA_DEFAULT_ENV are missing.")
     os.environ["LD_LIBRARY_PATH"] = f"{os.environ['CONDA_PREFIX']}/lib:{os.environ.get('LD_LIBRARY_PATH', '')}"
+
 
 def run_alphafold(args):
     base_name = os.path.splitext(os.path.basename(args.input_fasta))[0]
