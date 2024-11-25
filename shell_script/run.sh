@@ -48,6 +48,13 @@ case $host_name in
         ml load kalign-3.4.0_aarch64_native
         ml load nvhpc/24.5
         ;;
+    gn402)
+        # Intel SRP cpu
+        ml load hmmer-3.4 
+        ml load hh-suite-3.3_srp
+        ml load kalign-3.4.0_srp
+        ml load nvhpc/24.5
+        ;;
     MI210 | gn11)
         # AMD cpu
         ml load hmmer-3.4-a100 
@@ -56,7 +63,9 @@ case $host_name in
         ;;
     *)
         # Intel cpu w/ gcc
-        ml load hmmer-3.4 suite-3.3_AVX2 kalign-3.4.0
+        ml load hmmer-3.4
+        ml load suite-3.3_AVX2
+        ml load kalign-3.4.0
         ;;
 esac
 
