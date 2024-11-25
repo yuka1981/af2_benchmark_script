@@ -33,14 +33,32 @@ else
     exit 1
 fi
 
-# Purge modules
+# Purge and load modules
 ml purge
+
+case $host_name in
+    gn502 | gn503)
+        # Nvidia Grace cpu
+        ml load hmmer-3.4-arm 
+        ml load hh-suite-3.3_aarch64_native
+        ml load kalign-3.4.0_aarch64_native
+        ml load nvhpc/24.5
+        ;;
+    MI210 | gn11)
+        # AMD cpu
+        ml load hmmer-3.4-a100 
+        ml load hh-suite-3.3_AVX2
+        ml load kalign-3.4.0-a100
+        ;;
+    *)
+        # Intel cpu w/ gcc
+        ml load hmmer-3.4 suite-3.3_AVX2 kalign-3.4.0
+        ;;
+esac
+
 
 # Combined AMD and CUDA platform setup
 if [[ "$platform" == "amd" ]]; then
-    # Load related modules
-    ml load hmmer-3.4 hh-suite-3.3_AVX2 kalign-3.4.0
-
     case $mode in
         cpu)
             export JAX_PLATFORMS=cpu
@@ -67,9 +85,6 @@ if [[ "$platform" == "amd" ]]; then
             ;;
     esac
 elif [[ "$platform" == "nvidia" ]]; then
-    # Load related modules
-    ml load hmmer-3.4-a100 hh-suite-3.3_AVX2 kalign-3.4.0-a100
-
     case $mode in
         cpu)
             export JAX_PLATFORMS=cpu
@@ -121,8 +136,17 @@ else
 fi
 
 # Set up paths and variables
-#data_dir=/data/alphafold_data
-data_dir=/lustre2/reidlin/alphafold_data_hot
+case $host_name in
+    gn503)
+	data_dir=/mlperf41/alphafold_data
+        ;;
+    MI210)
+	data_dir=/data/alphafold_data
+        ;;
+    *)
+	data_dir=/lustre2/reidlin/alphafold_data_hot
+        ;;
+esac
 
 declare -A db_paths=(
     [bfd]="$data_dir/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt"
@@ -141,7 +165,7 @@ max_template_date='2022-01-01'
 log="$output_dir/$base_name-$date_time.log"
 
 # Log start
-echo "$base_name AlphaFold2 start at $(date +%m%d-%H:%M:%S)" > "$log"
+echo "$base_name AlphaFold2 start at $(date +%m%d-%H:%M:%S) time_stamp: $(date +%s)" > "$log"
 
 # Common arguments for running AlphaFold
 common_args=(
@@ -186,5 +210,5 @@ fi
 $numactl_exec "$work_dir/run_alphafold.py" "${common_args[@]}" "${preset_args[@]}" 2>&1 | tee -a "$log"
 
 # Log finish
-echo "$base_name AlphaFold2 finish at $(date +%m%d-%H:%M:%S)" >> "$log"
+echo "$base_name AlphaFold2 finish at $(date +%m%d-%H:%M:%S) time_stamp: $(date +%s)" >> "$log"
 
