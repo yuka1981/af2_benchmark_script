@@ -12,6 +12,10 @@ preset=$4
 platform=$5
 msa=$6
 
+base_name=$(echo $input | sed 's/.fasta//g')
+host_name=$(hostname | sed 's/.openlab//g')
+date_time=$(date +%m%d-%H%M%S)
+
 # Validate input arguments and file existence
 if [[ ! -f "$input" ]]; then
     echo "Error: Input file '$input' does not exist."
@@ -59,6 +63,8 @@ esac
 
 # Combined AMD and CUDA platform setup
 if [[ "$platform" == "amd" ]]; then
+    export TF_DETERMINISTIC_OPS=1
+
     case $mode in
         cpu)
             export JAX_PLATFORMS=cpu
@@ -115,9 +121,6 @@ if [[ -z "$CONDA_PREFIX" || -z "$CONDA_DEFAULT_ENV" ]]; then
 else
     export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
 
-    base_name=$(echo $input | sed 's/.fasta//g')
-    host_name=$(hostname | sed 's/.openlab//g')
-    date_time=$(date +%m%d-%H%M%S)
     work_dir=$(echo $PWD)
     output_dir="$work_dir/output/$host_name-$CONDA_DEFAULT_ENV-$date_time"
 
